@@ -3,386 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drone Mapping Calculators</title>
+    <title>AeroPlan - Aerial Mission Planner</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Link to your new CSS file -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Geoman CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h1>GSD-based mission planner</h1>
-
-        <div class="calculator-selector">
-            <button class="toggle-button active" id="btnTimeArea" onclick="switchCalculator('timeArea')">
-                Duration-based Planner
-            </button>
-            <button class="toggle-button" id="btnGSD" onclick="switchCalculator('gsd')">
-                GSD-based Planner
-            </button>
+    <!-- Premium Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="brand-aero">Aero</span><span class="brand-plan">Plan</span>
         </div>
+        <ul class="nav-links">
+            <li><a href="#home" class="nav-item active" data-target="page-home">Home</a></li>
+            <li><a href="#planner" class="nav-item" data-target="page-planner">Mission Planner</a></li>
+            <li><a href="#webmap" class="nav-item" data-target="page-webmap">Webmap</a></li>
+            <li><a href="#samples" class="nav-item" data-target="page-samples">Samples</a></li>
+            <li><a href="#contact" class="nav-item" data-target="page-contact">Contact</a></li>
+        </ul>
+    </nav>
 
-        <div id="timeAreaCalculator">
-            <p style="text-align: center; color: #007bff; font-weight: 700; font-size: 1rem;">
-                Input flight duration & Area to get all important aerial mission parameters
-            </p>
-
-            <div class="main-content">
-
-                <div class="input-sections">
-
-                    <div id="calculatorForm">
-
-                        <div class="input-group">
-                            <h2>1. Mission Time & Area</h2>
-
-                            <!-- UPDATED SECTION: Removed inline flex styles for equal width -->
-                            <div class="grid-row">
-                                <div class="grid-col"> <!-- Target Duration -->
-                                    <label for="target_duration">Target flight duration (min):</label>
-                                    <input type="number" id="target_duration" value="15.0" step="1.0" oninput="suggestGSD()" required>
-                                </div>
-                                <div class="grid-col"> <!-- Uncertainty Input -->
-                                    <label for="target_duration_unc">(±) Uncertainty (min):</label>
-                                    <input type="number" id="target_duration_unc" value="1.0" step="0.5">
-                                </div>
-                                <div class="grid-col"> <!-- Area -->
-                                    <label for="area_hectares">Area (Hectares - ha):</label>
-                                    <input type="number" id="area_hectares" value="10.0" step="0.1" oninput="suggestGSD()" required>
-                                </div>
-                            </div>
-                            <!-- END OF UPDATED SECTION -->
-
-                            <span class="input-description">The maximum time you want the fly over the total targeted area</span>
-
-                            <div style="margin-top: 15px;">
-                                <span class="input-description" style="font-weight:700; color: #343a40;">
-                                    ASSUMPTION: Area dimensions are calculated using (Length:Width ratio of 1.5:1)
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <h2>2. Sensor specifications</h2>
-
-                            <label for="drone_model" style="margin-top:0;">Select Model:</label>
-                            <select id="drone_model" onchange="loadDroneSpecs()">
-                                <option value="custom">Custom </option>
-                                <option value="dji_air_2s" selected>DJI Air 2S</option>
-                            </select>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="focal_length">Focal Length (f in mm):</label>
-                                    <input type="number" id="focal_length" value="9.0" step="0.1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="sensor_pixels_width">Image Width (Pixels):</label>
-                                    <input type="number" id="sensor_pixels_width" value="5472" step="1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="sensor_width">Sensor Width (mm):</label>
-                                    <input type="number" id="sensor_width" value="13.1" step="0.1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="sensor_length">Sensor Length (mm):</label>
-                                    <input type="number" id="sensor_length" value="8.8" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                     <label for="sensor_pixels_length">Image Length (Pixels):</label>
-                                     <input type="number" id="sensor_pixels_length" value="3648" step="1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="min_shutter_interval">Shutter Interval (sec/picture):</label>
-                                    <input type="number" id="min_shutter_interval" value="2.0" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="side_overlap">Side Overlap [%]:</label>
-                                    <input type="number" id="side_overlap" value="80" step="1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="front_overlap">Forward Overlap [%]:</label>
-                                    <input type="number" id="front_overlap" value="75" step="1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="min_speed">Minimum Speed (m/s):</label>
-                                    <input type="number" id="min_speed" value="1.0" step="0.1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="max_speed">Maximum Speed (m/s):</label>
-                                    <input type="number" id="max_speed" value="6.0" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="flight_direction">Flight Direction Angle (degrees):</label>
-                                    <input type="number" id="flight_direction" value="0" step="1" disabled required>
-                                </div>
-                                <div class="grid-col">
-                                    <span class="input-description" style="margin-top: 35px;">(Set to 0° - parallel to length)</span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <button onclick="calculateMission()">GET MISSION PARAMETERS</button>
-
-                        <div id="errorMessage" class="error-box" style="display:none;"></div>
+    <div class="view-container">
+        
+        <!-- ================= HOME PAGE ================= -->
+        <section id="page-home" class="page-view active">
+            <div class="hero-section">
+                <div class="hero-content">
+                    <h1 class="hero-title">Level Precision for what matter the most.</h1>
+                    <p class="hero-subtitle">Harness GSD-driven intelligence to plan perfect missions. From automated flight paths to real-time resolution modeling, capture the field data that matters.</p>
+                    <div class="hero-buttons">
+                        <button class="btn-primary btn-glow" onclick="document.querySelector('[data-target=\'page-planner\']').click()">Start Planning</button>
+                        <button class="btn-secondary" onclick="document.querySelector('[data-target=\'page-webmap\']').click()">Explore Map</button>
                     </div>
                 </div>
-
-                <div class="result-section">
-                    <div id="results" class="result-box" style="display:none;">
-                        <h3>MISSION PARAMETERS</h3>
-
-                        <div class="result-item">Expected GSD: <strong id="res_gsd"></strong> [cm/px]</div>
-
-                        <div class="result-item">
-                            Flight height (H): <strong id="res_height"></strong> [m]
-                        </div>
-
-                        <div class="result-item">
-                            Ground speed: <strong id="res_speed"></strong> [m/s]
-                        </div>
-
-                        <div class="result-item">
-                            Image footprint (L x W): <strong id="res_footprint_dims"></strong> [m]
-                        </div>
-
-                        <div class="result-item">
-                             Image footprint area: <strong id="res_footprint_area"></strong> [m²]
-                        </div>
-
-                        <div class="result-item">
-                            Targeted area (L x W): <strong id="res_length_width_display"></strong> [m]
-                        </div>
-                        <div class="result-item">
-                            Targeted area: <strong id="res_calculated_area_display"></strong> [m²]
-                        </div>
-
-                        <div class="result-item">
-                            Shutter Interval: <strong id="res_min_shutter"></strong> [sec/pic]
-                            <span class="secondary-text" id="res_fo_detail"></span>
-                        </div>
-
-                        <div class="result-item">
-                            Line spacing: <strong id="res_line_spacing"></strong> [m]
-                            <span class="secondary-text" id="res_so_detail"></span>
-                        </div>
-
-                        <div class="result-item">
-                            Total Path Length: <strong id="res_path"></strong> [km]
-                        </div>
-                        <div class="result-item secondary-result-line">
-                            (Based on <strong id="res_lines"></strong> flight lines)
-                        </div>
-
-                        <div class="result-item">
-                            Estimated Flight duration: <strong id="res_duration" style="color:green;"></strong> [minutes]
+                <div class="hero-visual">
+                    <div class="drone-blob-container">
+                        <div class="blob"></div>
+                        <div class="glass-card mockup-card">
+                            <h3>Mission Ready</h3>
+                            <p>Efficiency: 98%</p>
+                            <p>Coverage: Optimal</p>
                         </div>
                     </div>
                 </div>
-
             </div>
+        </section>
 
-        </div>
+        <!-- ================= MISSION PLANNER ================= -->
+        <section id="page-planner" class="page-view">
+            <!-- ORIGINAL CALCULATOR WRAPPED -->
+            <div class="container planner-container">
+                <h1 class="planner-title">GSD-based Mission Planner</h1>
+                <div class="calculator-selector">
+                    <button class="toggle-button active" id="btnTimeArea" onclick="switchCalculator('timeArea')">
+                        Duration-based Planner
+                    </button>
+                    <button class="toggle-button" id="btnGSD" onclick="switchCalculator('gsd')">
+                        GSD-based Planner
+                    </button>
+                </div>
 
-        <div id="gsdCalculator" style="display:none;">
-             <p style="text-align: center; color: #007bff; font-weight: 700; font-size: 1rem;">
-                Input targeted GSD & Area to calculate the required parameters.
-            </p>
-
-            <div class="main-content">
-                <div class="input-sections">
-                    <div id="gsdCalculatorForm">
-                        <div class="input-group">
-                            <h2>1. Target Mission Parameters</h2>
-
-                            <!-- UPDATED SECTION: Removed inline flex styles for equal width -->
-                            <div class="grid-row">
-                                <div class="grid-col"> <!-- Target GSD -->
-                                    <label for="target_gsd">Target GSD (cm/px):</label>
-                                    <input type="number" id="target_gsd" value="2.0" step="0.1" oninput="suggestFlightDuration()" required>
+                <!-- TIME AREA CALC -->
+                <div id="timeAreaCalculator">
+                    <p class="calc-subtitle">Input flight duration & Area to get all important aerial mission parameters</p>
+                    <div class="main-content">
+                        <div class="input-sections">
+                            <div id="calculatorForm">
+                                <div class="input-group">
+                                    <h2>1. Mission Time & Area</h2>
+                                    <div class="grid-row">
+                                        <div class="grid-col">
+                                            <label for="target_duration">Target flight duration (min):</label>
+                                            <input type="number" id="target_duration" value="15.0" step="1.0" oninput="suggestGSD()" required>
+                                        </div>
+                                        <div class="grid-col">
+                                            <label for="target_duration_unc">(±) Uncertainty (min):</label>
+                                            <input type="number" id="target_duration_unc" value="1.0" step="0.5">
+                                        </div>
+                                        <div class="grid-col">
+                                            <label for="area_hectares">Area (Hectares - ha):</label>
+                                            <input type="number" id="area_hectares" value="10.0" step="0.1" oninput="suggestGSD()" required>
+                                        </div>
+                                    </div>
+                                    <span class="input-description">The maximum time you want the fly over the total targeted area</span>
+                                    <div style="margin-top: 15px;">
+                                        <span class="input-description" style="font-weight:700; color: #343a40;">ASSUMPTION: Area dimensions are calculated using (Length:Width ratio of 1.5:1)</span>
+                                    </div>
                                 </div>
-                                <div class="grid-col"> <!-- Uncertainty Input -->
-                                    <label for="target_gsd_unc">(±) Uncertainty (cm):</label>
-                                    <input type="number" id="target_gsd_unc" value="0.2" step="0.1">
-                                </div>
-                                <div class="grid-col"> <!-- Area -->
-                                    <label for="gsd_area_hectares">Area (Hectares - ha):</label>
-                                    <input type="number" id="gsd_area_hectares" value="20.0" step="0.1" oninput="suggestFlightDuration()" required>
-                                </div>
-                            </div>
-                            <!-- END OF UPDATED SECTION -->
 
-
-                            <div style="margin-top: 15px;">
-                                <span class="input-description" style="font-weight:700; color: #343a40;">
-                                    ASSUMPTION: Area dimensions are calculated using (Length:Width ratio of 1.5:1)
-                                </span>
+                                <div class="input-group">
+                                    <h2>2. Sensor specifications</h2>
+                                    <label for="drone_model" style="margin-top:0;">Select Model:</label>
+                                    <select id="drone_model" onchange="loadDroneSpecs()">
+                                        <option value="custom">Custom </option>
+                                        <option value="dji_air_2s" selected>DJI Air 2S</option>
+                                    </select>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Focal Length (mm):</label><input type="number" id="focal_length" value="9.0" step="0.1" required></div>
+                                        <div class="grid-col"><label>Image Width (px):</label><input type="number" id="sensor_pixels_width" value="5472" step="1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Sensor Width (mm):</label><input type="number" id="sensor_width" value="13.1" step="0.1" required></div>
+                                        <div class="grid-col"><label>Sensor Length (mm):</label><input type="number" id="sensor_length" value="8.8" step="0.1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Image Length (px):</label><input type="number" id="sensor_pixels_length" value="3648" step="1" required></div>
+                                        <div class="grid-col"><label>Shutter Interval (s/pic):</label><input type="number" id="min_shutter_interval" value="2.0" step="0.1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Side Overlap [%]:</label><input type="number" id="side_overlap" value="80" step="1" required></div>
+                                        <div class="grid-col"><label>Forward Overlap [%]:</label><input type="number" id="front_overlap" value="75" step="1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Min Speed (m/s):</label><input type="number" id="min_speed" value="1.0" step="0.1" required></div>
+                                        <div class="grid-col"><label>Max Speed (m/s):</label><input type="number" id="max_speed" value="6.0" step="0.1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Flight Direction Angle:</label><input type="number" id="flight_direction" value="0" step="1" disabled required></div>
+                                        <div class="grid-col"><span class="input-description" style="margin-top: 35px;">(Set to 0° - parallel to length)</span></div>
+                                    </div>
+                                </div>
+                                <button class="calc-btn" onclick="calculateMission()">GET MISSION PARAMETERS</button>
+                                <div id="errorMessage" class="error-box" style="display:none;"></div>
                             </div>
                         </div>
 
-                        <div class="input-group">
-                            <h2>2. Sensor specifications</h2>
-
-                            <label for="gsd_drone_model" style="margin-top:0;">Select Model:</label>
-                            <select id="gsd_drone_model" onchange="gsdLoadDroneSpecs()">
-                                <option value="custom">Custom </option>
-                                <option value="dji_air_2s" selected>DJI Air 2S</option>
-                            </select>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="gsd_focal_length">Focal Length (f in mm):</label>
-                                    <input type="number" id="gsd_focal_length" value="9.0" step="0.1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="gsd_sensor_pixels_width">Image Width (Pixels):</label>
-                                    <input type="number" id="gsd_sensor_pixels_width" value="5472" step="1" required>
-                                </div>
+                        <div class="result-section">
+                            <div id="results" class="result-box glass-card" style="display:none;">
+                                <h3>MISSION PARAMETERS</h3>
+                                <div class="result-item">Expected GSD: <strong id="res_gsd"></strong> [cm/px]</div>
+                                <div class="result-item">Flight height (H): <strong id="res_height"></strong> [m]</div>
+                                <div class="result-item">Ground speed: <strong id="res_speed"></strong> [m/s]</div>
+                                <div class="result-item">Image footprint (L x W): <strong id="res_footprint_dims"></strong> [m]</div>
+                                <div class="result-item">Image footprint area: <strong id="res_footprint_area"></strong> [m²]</div>
+                                <div class="result-item">Targeted area (L x W): <strong id="res_length_width_display"></strong> [m]</div>
+                                <div class="result-item">Targeted area: <strong id="res_calculated_area_display"></strong> [m²]</div>
+                                <div class="result-item">Shutter Interval: <strong id="res_min_shutter"></strong> [sec/pic]<span class="secondary-text" id="res_fo_detail"></span></div>
+                                <div class="result-item">Line spacing: <strong id="res_line_spacing"></strong> [m]<span class="secondary-text" id="res_so_detail"></span></div>
+                                <div class="result-item">Total Path Length: <strong id="res_path"></strong> [km]</div>
+                                <div class="result-item secondary-result-line">(Based on <strong id="res_lines"></strong> flight lines)</div>
+                                <div class="result-item">Estimated Flight duration: <strong id="res_duration" style="color:var(--primary-color);"></strong> [minutes]</div>
                             </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="gsd_sensor_width">Sensor Width (mm):</label>
-                                    <input type="number" id="gsd_sensor_width" value="13.1" step="0.1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="gsd_sensor_length">Sensor Length (mm):</label>
-                                    <input type="number" id="gsd_sensor_length" value="8.8" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="gsd_sensor_pixels_length">Image Length (Pixels):</label>
-                                    <input type="number" id="gsd_sensor_pixels_length" value="3648" step="1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="gsd_min_shutter_interval">Shutter Interval (sec/picture):</label>
-                                    <input type="number" id="gsd_min_shutter_interval" value="2.0" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="gsd_side_overlap">Side Overlap [%]:</label>
-                                    <input type="number" id="gsd_side_overlap" value="80" step="1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="gsd_front_overlap">Forward Overlap [%]:</label>
-                                    <input type="number" id="gsd_front_overlap" value="75" step="1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="gsd_min_speed">Minimum Speed (m/s):</label>
-                                    <input type="number" id="gsd_min_speed" value="1.0" step="0.1" required>
-                                </div>
-                                <div class="grid-col">
-                                    <label for="gsd_max_speed">Maximum Speed (m/s):</label>
-                                    <input type="number" id="gsd_max_speed" value="6.0" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="grid-row">
-                                <div class="grid-col">
-                                    <label for="gsd_flight_direction">Flight Direction Angle (degrees):</label>
-                                    <input type="number" id="gsd_flight_direction" value="0" step="1" disabled required>
-                                </div>
-                                <div class="grid-col">
-                                    <span class="input-description" style="margin-top: 35px;">(Set to 0° - parallel to length)</span>
-                                </div>
-                            </div>
-
                         </div>
-
-                        <button style="background-color: #007bff;" onclick="calculateGSDMission()">GET MISSION PARAMETERS</button>
-
-                        <div id="gsdErrorMessage" class="error-box" style="display:none;"></div>
                     </div>
                 </div>
 
-                <div class="result-section">
-                    <div id="gsdResults" class="result-box" style="display:none;">
-                        <h3 style="color: #007bff;">MISSION PARAMETERS</h3>
+                <!-- GSD CALC -->
+                <div id="gsdCalculator" style="display:none;">
+                     <p class="calc-subtitle">Input targeted GSD & Area to calculate the required parameters</p>
+                    <div class="main-content">
+                        <div class="input-sections">
+                            <div id="gsdCalculatorForm">
+                                <div class="input-group">
+                                    <h2>1. Target Mission Parameters</h2>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Target GSD (cm/px):</label><input type="number" id="target_gsd" value="2.0" step="0.1" oninput="suggestFlightDuration()" required></div>
+                                        <div class="grid-col"><label>(±) Uncertainty (cm):</label><input type="number" id="target_gsd_unc" value="0.2" step="0.1"></div>
+                                        <div class="grid-col"><label>Area (Hectares - ha):</label><input type="number" id="gsd_area_hectares" value="20.0" step="0.1" oninput="suggestFlightDuration()" required></div>
+                                    </div>
+                                    <div style="margin-top: 15px;"><span class="input-description" style="font-weight:700; color: #343a40;">ASSUMPTION: Area dimensions are calculated using (Length:Width ratio of 1.5:1)</span></div>
+                                </div>
 
-                        <div class="result-item">
-                            Flight duration: <strong id="gsd_res_duration" style="color:green;"></strong> [minutes] </div>
-                        <div class="result-item">
-                            Ground speed: <strong id="gsd_res_speed"></strong> [m/s]
-                            <span class="secondary-text" id="gsd_res_speed_warning"></span>
+                                <div class="input-group">
+                                    <h2>2. Sensor specifications</h2>
+                                    <label style="margin-top:0;">Select Model:</label>
+                                    <select id="gsd_drone_model" onchange="gsdLoadDroneSpecs()">
+                                        <option value="custom">Custom </option>
+                                        <option value="dji_air_2s" selected>DJI Air 2S</option>
+                                    </select>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Focal Length (mm):</label><input type="number" id="gsd_focal_length" value="9.0" step="0.1" required></div>
+                                        <div class="grid-col"><label>Image Width (px):</label><input type="number" id="gsd_sensor_pixels_width" value="5472" step="1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Sensor Width (mm):</label><input type="number" id="gsd_sensor_width" value="13.1" step="0.1" required></div>
+                                        <div class="grid-col"><label>Sensor Length (mm):</label><input type="number" id="gsd_sensor_length" value="8.8" step="0.1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Image Length (px):</label><input type="number" id="gsd_sensor_pixels_length" value="3648" step="1" required></div>
+                                        <div class="grid-col"><label>Shutter Interval (s/pic):</label><input type="number" id="gsd_min_shutter_interval" value="2.0" step="0.1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Side Overlap [%]:</label><input type="number" id="gsd_side_overlap" value="80" step="1" required></div>
+                                        <div class="grid-col"><label>Forward Overlap [%]:</label><input type="number" id="gsd_front_overlap" value="75" step="1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Min Speed (m/s):</label><input type="number" id="gsd_min_speed" value="1.0" step="0.1" required></div>
+                                        <div class="grid-col"><label>Max Speed (m/s):</label><input type="number" id="gsd_max_speed" value="6.0" step="0.1" required></div>
+                                    </div>
+                                    <div class="grid-row">
+                                        <div class="grid-col"><label>Flight Direction Angle:</label><input type="number" id="gsd_flight_direction" value="0" step="1" disabled required></div>
+                                        <div class="grid-col"><span class="input-description" style="margin-top: 35px;">(Set to 0° - parallel to length)</span></div>
+                                    </div>
+                                </div>
+                                <button class="calc-btn" onclick="calculateGSDMission()">GET MISSION PARAMETERS</button>
+                                <div id="gsdErrorMessage" class="error-box" style="display:none;"></div>
+                            </div>
                         </div>
-                        <div class="result-item">
-                            Flight height (H): <strong id="gsd_res_height"></strong> [m]
+                        <div class="result-section">
+                            <div id="gsdResults" class="result-box glass-card" style="display:none;">
+                                <h3 class="highlight-title">MISSION PARAMETERS</h3>
+                                <div class="result-item">Flight duration: <strong id="gsd_res_duration" style="color:var(--primary-color);"></strong> [min] </div>
+                                <div class="result-item">Ground speed: <strong id="gsd_res_speed"></strong> [m/s]<span class="secondary-text" id="gsd_res_speed_warning"></span></div>
+                                <div class="result-item">Flight height (H): <strong id="gsd_res_height"></strong> [m]</div>
+                                <div class="result-item">Expected GSD: <strong id="gsd_res_gsd"></strong> [cm/px]</div>
+                                <div class="result-item">Image footprint (L x W): <strong id="gsd_res_footprint_dims"></strong> [m]</div>
+                                <div class="result-item">Image footprint area: <strong id="gsd_res_footprint_area"></strong> [m²]</div>
+                                <div class="result-item">Targeted area (L x W): <strong id="gsd_res_length_width_display"></strong> [m]</div>
+                                <div class="result-item">Targeted area: <strong id="gsd_res_calculated_area_display"></strong> [m²]</div>
+                                <div class="result-item">Total Path Length: <strong id="gsd_res_path"></strong> [km]</div>
+                                <div class="result-item secondary-result-line">(Based on <strong id="gsd_res_lines"></strong> flight lines)</div>
+                                <div class="result-item">Line Spacing: <strong id="gsd_res_line_spacing"></strong> [m]<span class="secondary-text" id="gsd_res_so_detail"></span></div>
+                                <div class="result-item">Shutter Interval: <strong id="gsd_res_min_shutter"></strong> [sec/pic]<span class="secondary-text" id="gsd_res_fo_detail"></span></div>
+                            </div>
                         </div>
-
-                        <div class="result-item">
-                            Expected GSD: <strong id="gsd_res_gsd"></strong> [cm/px]
-                        </div>
-
-                        <div class="result-item">
-                            Image footprint (L x W): <strong id="gsd_res_footprint_dims"></strong> [m]
-                        </div>
-
-                        <div class="result-item">
-                             Image footprint area: <strong id="gsd_res_footprint_area"></strong> [m²]
-                        </div>
-
-                        <div class="result-item">
-                            Targeted area (L x W): <strong id="gsd_res_length_width_display"></strong> [m]
-                        </div>
-                        <div class="result-item">
-                            Targeted area: <strong id="gsd_res_calculated_area_display"></strong> [m²]
-                        </div>
-
-                        <div class="result-item">
-                            Total Path Length: <strong id="gsd_res_path"></strong> [km]
-                        </div>
-                        <div class="result-item secondary-result-line">
-                            (Based on <strong id="gsd_res_lines"></strong> flight lines)
-                        </div>
-
-                        <div class="result-item">
-                            Line Spacing: <strong id="gsd_res_line_spacing"></strong> [m]
-                            <span class="secondary-text" id="gsd_res_so_detail"></span>
-                        </div>
-
-                        <div class="result-item">
-                            Shutter Interval: <strong id="gsd_res_min_shutter"></strong> [sec/pic]
-                            <span class="secondary-text" id="gsd_res_fo_detail"></span>
-                        </div>
-
                     </div>
                 </div>
-
             </div>
-        </div>
+        </section>
+
+        <!-- ================= WEBMAP PAGE ================= -->
+        <section id="page-webmap" class="page-view">
+            <div id="leaflet-map-container" style="width: 100%; height: 100%;"></div>
+        </section>
+
+        <!-- ================= SAMPLES PAGE ================= -->
+        <section id="page-samples" class="page-view">
+            <div class="samples-container">
+                <h2 class="section-title">Gallery & Data Samples</h2>
+                <div class="gallery-grid">
+                    <div class="gallery-item glass-card">
+                        <div class="img-placeholder bg-gradient-1"></div>
+                        <h4>Orthomosaic Rendering</h4>
+                        <p>High-res mapping generated at 2cm/px GSD.</p>
+                    </div>
+                    <div class="gallery-item glass-card">
+                        <div class="img-placeholder bg-gradient-2"></div>
+                        <h4>Thermal Inspection</h4>
+                        <p>Radiometric thermal data pipeline sample.</p>
+                    </div>
+                    <div class="gallery-item glass-card">
+                        <div class="img-placeholder bg-gradient-3"></div>
+                        <h4>PointCloud 3D</h4>
+                        <p>LiDAR equivalent point cloud density visualization.</p>
+                    </div>
+                    <div class="gallery-item glass-card">
+                        <div class="img-placeholder bg-gradient-4"></div>
+                        <h4>Vegetation Index (NDVI)</h4>
+                        <p>Crop health multispectral overlay demo.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= CONTACT PAGE ================= -->
+        <section id="page-contact" class="page-view">
+            <div class="contact-container">
+                <div class="glass-card contact-card">
+                    <h2 class="section-title">Get in Touch</h2>
+                    <p class="contact-subtitle">Have questions or need custom mission configurations? Reach out to our team.</p>
+                    <form class="contact-form" onsubmit="event.preventDefault(); alert('Message Sent!');">
+                        <div class="input-group">
+                            <label>Name</label>
+                            <input type="text" placeholder="Jane Doe" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <input type="email" placeholder="jane@example.com" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Message</label>
+                            <textarea rows="5" placeholder="How can we help you?" required></textarea>
+                        </div>
+                        <button class="btn-primary" type="submit">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </section>
 
     </div>
 
-    <!--
-      Link to your new JS file.
-      'defer' ensures the script runs after the HTML document is fully loaded.
-    -->
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
     <script src="script.js" defer></script>
-
+    <script src="app.js" defer></script>
 </body>
 </html>
