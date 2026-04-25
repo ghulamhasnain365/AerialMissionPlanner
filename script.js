@@ -9,6 +9,34 @@ function roundToQuarter(value) {
     return Math.round(value * 4) / 4;
 }
 
+function setPlannerMapButton(source, isVisible) {
+    const buttonId = source === 'gsd' ? 'btnPlanMapGsd' : 'btnPlanMapTime';
+    const button = document.getElementById(buttonId);
+    if (button) {
+        button.style.display = isVisible ? 'block' : 'none';
+    }
+}
+
+function hidePlannerMapButtons() {
+    setPlannerMapButton('timeArea', false);
+    setPlannerMapButton('gsd', false);
+}
+
+function publishMissionParameters(source, missionParameters) {
+    const mission = {
+        ...missionParameters,
+        source,
+        createdAt: new Date().toISOString()
+    };
+
+    window.currentMissionParameters = mission;
+    if (typeof window.storeMissionParameters === 'function') {
+        window.storeMissionParameters(mission);
+    }
+
+    setPlannerMapButton(source, true);
+}
+
 // --- CORE JAVASCRIPT LOGIC ---
 class DroneMappingCalculator {
 
@@ -329,6 +357,7 @@ function switchCalculator(calculatorName) {
     // Hide results when switching
     document.getElementById('results').style.display = 'none';
     document.getElementById('gsdResults').style.display = 'none';
+    hidePlannerMapButtons();
     // Hide error messages
     document.getElementById('errorMessage').style.display = 'none';
     document.getElementById('gsdErrorMessage').style.display = 'none';
@@ -339,7 +368,8 @@ function switchCalculator(calculatorName) {
         gsdDiv.style.display = 'none';
         btnTimeArea.classList.add('active');
         btnGSD.classList.remove('active');
-        document.querySelector('h1').innerHTML = 'Duration-based Mission Planner'; // More robust selector
+        const plannerTitle = document.querySelector('.planner-title');
+        if (plannerTitle) plannerTitle.innerHTML = 'Duration-based Mission Planner';
         suggestGSD(); // Update suggestion on switch
     } else if (calculatorName === 'gsd') {
         syncSpecsToGSDForm(); // Copy sensor specs from the other form
@@ -348,7 +378,8 @@ function switchCalculator(calculatorName) {
         gsdDiv.style.display = 'block';
         btnTimeArea.classList.remove('active');
         btnGSD.classList.add('active');
-        document.querySelector('h1').innerHTML = 'GSD-based Mission Planner';
+        const plannerTitle = document.querySelector('.planner-title');
+        if (plannerTitle) plannerTitle.innerHTML = 'GSD-based Mission Planner';
 
         suggestFlightDuration(); // Update suggestion on switch
     }
@@ -595,6 +626,7 @@ function calculateMission() {
     const resultsBox = document.getElementById('results');
     errorBox.style.display = 'none'; // Clear previous errors/warnings
     resultsBox.style.display = 'none';
+    setPlannerMapButton('timeArea', false);
 
     // --- Input Gathering ---
      const inputs = {
@@ -710,6 +742,27 @@ function calculateMission() {
         // Display final duration with color and optional warning suffix
         document.getElementById('res_duration').innerHTML = `<strong style="color:${duration_color};">${finalDurationMin.toFixed(1)}</strong><span style="font-size: 0.85em; color: ${duration_color};">${duration_warning_suffix}</span>`;
 
+        publishMissionParameters('timeArea', {
+            sourceLabel: 'Duration-based Planner',
+            lineSpacingM: roundedLineSpacing,
+            flightDirectionDeg: parseFloat(document.getElementById('flight_direction').value) || 0,
+            heightM: roundedHeight,
+            speedMps: roundedSpeed,
+            gsdCm: finalGSD,
+            footprintLengthM: footprint.height,
+            footprintWidthM: footprint.width,
+            footprintAreaSqM: footprint.area,
+            targetAreaSqM: area_sq_m,
+            boundingLengthM: inputs.bounding_length_m,
+            boundingWidthM: inputs.bounding_width_m,
+            pathLengthM: finalTotalPath,
+            durationMin: finalDurationMin,
+            lineCount: finalNumLines,
+            shutterIntervalSec: finalShutterInterval,
+            frontOverlapPercent: finalAchievedFO,
+            sideOverlapPercent: finalAchievedSO
+        });
+
         resultsBox.style.display = 'block'; // Show results
 
     } catch (e) {
@@ -735,6 +788,7 @@ function calculateGSDMission() {
     const resultsBox = document.getElementById('gsdResults');
     errorBox.style.display = 'none'; // Clear previous
     resultsBox.style.display = 'none';
+    setPlannerMapButton('gsd', false);
 
     // --- Input Gathering ---
     const inputs = {
@@ -936,6 +990,27 @@ function calculateGSDMission() {
         document.getElementById('gsd_res_min_shutter').innerHTML = `<strong style="color:${fo_color};">${finalShutterInterval.toFixed(1)}</strong>`;
         document.getElementById('gsd_res_fo_detail').innerHTML = `<span style="color:${fo_color};">${fo_warning}</span>`;
 
+        publishMissionParameters('gsd', {
+            sourceLabel: 'GSD-based Planner',
+            lineSpacingM: roundedLineSpacing,
+            flightDirectionDeg: inputs.flight_direction_deg || 0,
+            heightM: roundedHeight,
+            speedMps: roundedSpeed,
+            gsdCm: finalGSD,
+            footprintLengthM: footprint.height,
+            footprintWidthM: footprint.width,
+            footprintAreaSqM: footprint.area,
+            targetAreaSqM: area_sq_m,
+            boundingLengthM: inputs.bounding_length_m,
+            boundingWidthM: inputs.bounding_width_m,
+            pathLengthM: finalTotalPath,
+            durationMin: finalDurationMin,
+            lineCount: finalNumLines,
+            shutterIntervalSec: finalShutterInterval,
+            frontOverlapPercent: finalAchievedFO,
+            sideOverlapPercent: finalAchievedSO
+        });
+
         resultsBox.style.display = 'block'; // Show results
 
     } catch (e) {
@@ -950,7 +1025,7 @@ function calculateGSDMission() {
 /**
  * Initializes the page on load: loads default drone specs and sets the initial view.
  */
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', function() {
     try {
         loadDroneSpecs(); // Load DJI Air 2S defaults
         switchCalculator('timeArea'); // Show Duration planner first
@@ -963,4 +1038,4 @@ window.onload = function() {
             errorBox.style.display = 'block';
          }
     }
-};
+});

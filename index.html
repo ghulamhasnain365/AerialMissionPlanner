@@ -7,13 +7,13 @@
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
+
     <!-- Geoman CSS -->
     <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -27,14 +27,13 @@
         <ul class="nav-links">
             <li><a href="#home" class="nav-item active" data-target="page-home">Home</a></li>
             <li><a href="#planner" class="nav-item" data-target="page-planner">Mission Planner</a></li>
-            <li><a href="#webmap" class="nav-item" data-target="page-webmap">Webmap</a></li>
             <li><a href="#samples" class="nav-item" data-target="page-samples">Samples</a></li>
             <li><a href="#contact" class="nav-item" data-target="page-contact">Contact</a></li>
         </ul>
     </nav>
 
     <div class="view-container">
-        
+
         <!-- ================= HOME PAGE ================= -->
         <section id="page-home" class="page-view active">
             <div class="hero-section">
@@ -43,7 +42,7 @@
                     <p class="hero-subtitle">Harness GSD-driven intelligence to plan perfect missions. From automated flight paths to real-time resolution modeling, capture the field data that matters.</p>
                     <div class="hero-buttons">
                         <button class="btn-primary btn-glow" onclick="document.querySelector('[data-target=\'page-planner\']').click()">Start Planning</button>
-                        <button class="btn-secondary" onclick="document.querySelector('[data-target=\'page-webmap\']').click()">Explore Map</button>
+                        <button class="btn-secondary" onclick="document.querySelector('[data-target=\'page-planner\']').click()">Explore Map</button>
                     </div>
                 </div>
                 <div class="hero-visual">
@@ -61,17 +60,21 @@
 
         <!-- ================= MISSION PLANNER ================= -->
         <section id="page-planner" class="page-view">
-            <!-- ORIGINAL CALCULATOR WRAPPED -->
-            <div class="container planner-container">
-                <h1 class="planner-title">GSD-based Mission Planner</h1>
-                <div class="calculator-selector">
-                    <button class="toggle-button active" id="btnTimeArea" onclick="switchCalculator('timeArea')">
-                        Duration-based Planner
-                    </button>
-                    <button class="toggle-button" id="btnGSD" onclick="switchCalculator('gsd')">
-                        GSD-based Planner
-                    </button>
+            <div class="planner-fullscreen">
+                <div class="planner-map-panel">
+                    <div id="leaflet-map-container"></div>
                 </div>
+
+                <div class="planner-controls-panel">
+                    <h1 class="planner-title">Duration-based Mission Planner</h1>
+                    <div class="calculator-selector">
+                        <button class="toggle-button active" id="btnTimeArea" onclick="switchCalculator('timeArea')">
+                            Duration-based Planner
+                        </button>
+                        <button class="toggle-button" id="btnGSD" onclick="switchCalculator('gsd')">
+                            GSD-based Planner
+                        </button>
+                    </div>
 
                 <!-- TIME AREA CALC -->
                 <div id="timeAreaCalculator">
@@ -95,6 +98,7 @@
                                             <input type="number" id="area_hectares" value="10.0" step="0.1" oninput="suggestGSD()" required>
                                         </div>
                                     </div>
+                                    <div id="measuredAreaNote" class="measured-area-note">Draw a polygon on the map to use measured area.</div>
                                     <span class="input-description">The maximum time you want the fly over the total targeted area</span>
                                     <div style="margin-top: 15px;">
                                         <span class="input-description" style="font-weight:700; color: #343a40;">ASSUMPTION: Area dimensions are calculated using (Length:Width ratio of 1.5:1)</span>
@@ -153,6 +157,9 @@
                                 <div class="result-item">Total Path Length: <strong id="res_path"></strong> [km]</div>
                                 <div class="result-item secondary-result-line">(Based on <strong id="res_lines"></strong> flight lines)</div>
                                 <div class="result-item">Estimated Flight duration: <strong id="res_duration" style="color:var(--primary-color);"></strong> [minutes]</div>
+                                <div class="map-action-row">
+                                    <button type="button" id="btnPlanMapTime" class="calc-btn map-cta" onclick="openMissionMap()" style="display:none;">FOCUS MAP</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -171,6 +178,7 @@
                                         <div class="grid-col"><label>(±) Uncertainty (cm):</label><input type="number" id="target_gsd_unc" value="0.2" step="0.1"></div>
                                         <div class="grid-col"><label>Area (Hectares - ha):</label><input type="number" id="gsd_area_hectares" value="20.0" step="0.1" oninput="suggestFlightDuration()" required></div>
                                     </div>
+                                    <div id="gsdMeasuredAreaNote" class="measured-area-note">Draw a polygon on the map to use measured area.</div>
                                     <div style="margin-top: 15px;"><span class="input-description" style="font-weight:700; color: #343a40;">ASSUMPTION: Area dimensions are calculated using (Length:Width ratio of 1.5:1)</span></div>
                                 </div>
 
@@ -225,16 +233,39 @@
                                 <div class="result-item secondary-result-line">(Based on <strong id="gsd_res_lines"></strong> flight lines)</div>
                                 <div class="result-item">Line Spacing: <strong id="gsd_res_line_spacing"></strong> [m]<span class="secondary-text" id="gsd_res_so_detail"></span></div>
                                 <div class="result-item">Shutter Interval: <strong id="gsd_res_min_shutter"></strong> [sec/pic]<span class="secondary-text" id="gsd_res_fo_detail"></span></div>
+                                <div class="map-action-row">
+                                    <button type="button" id="btnPlanMapGsd" class="calc-btn map-cta" onclick="openMissionMap()" style="display:none;">FOCUS MAP</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+                </div>
 
-        <!-- ================= WEBMAP PAGE ================= -->
-        <section id="page-webmap" class="page-view">
-            <div id="leaflet-map-container" style="width: 100%; height: 100%;"></div>
+                <div class="map-tools-overlay">
+                    <div class="map-panel glass-card">
+                        <h3>Mission Geometry</h3>
+                        <div id="mapMissionSummary" class="map-summary">Draw area, takeoff, and landing.</div>
+                        <div id="mapAreaReadout" class="map-area-readout">Measured area: -- ha</div>
+                        <div class="map-tool-grid">
+                            <button type="button" id="btnSetTakeoff" class="map-tool-btn takeoff-tool" onclick="activateTakeoffTool()">Takeoff</button>
+                            <button type="button" id="btnSetLanding" class="map-tool-btn landing-tool" onclick="activateLandingTool()">Landing</button>
+                            <button type="button" id="btnDrawArea" class="map-tool-btn area-tool" onclick="activateAreaTool()">Area</button>
+                            <button type="button" id="btnClearGeometry" class="map-tool-btn neutral-tool" onclick="clearMissionGeometry()">Clear</button>
+                        </div>
+                        <div class="map-field">
+                            <label for="mapFlightAngle">Flight angle</label>
+                            <input type="number" id="mapFlightAngle" value="0" step="1" onchange="regenerateFlightPathIfReady()">
+                        </div>
+                        <button type="button" id="btnGeneratePath" class="calc-btn map-generate-btn" onclick="generateFlightPath()">GENERATE FLIGHT PATH</button>
+                        <div class="export-row">
+                            <button type="button" id="btnDownloadKml" class="btn-secondary export-btn" onclick="downloadMissionKML()" disabled>KML</button>
+                            <button type="button" id="btnDownloadKmz" class="btn-secondary export-btn" onclick="downloadMissionKMZ()" disabled>KMZ</button>
+                        </div>
+                        <div id="mapStatus" class="map-status">Draw the mission area polygon to calculate from real area.</div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- ================= SAMPLES PAGE ================= -->
@@ -296,6 +327,8 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="script.js" defer></script>
     <script src="app.js" defer></script>
 </body>

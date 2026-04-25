@@ -245,31 +245,160 @@ input, select, textarea, button {
 /* ================= MISSION PLANNER PAGE ================= */
 #page-planner {
     background: var(--bg-light);
+    padding: 0;
 }
 
-.planner-container {
-    max-width: 1200px;
-    margin: 0 auto;
+.planner-fullscreen {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.planner-map-panel {
+    position: absolute;
+    inset: 0;
+    background: #dbeafe;
+}
+
+#leaflet-map-container {
+    width: 100%;
+    height: 100%;
+}
+
+.planner-controls-panel {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: 300px;
+    max-width: calc(100vw - 24px);
+    z-index: 1100;
+    overflow-y: auto;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    font-size: 0.85rem;
 }
 
 .planner-title {
     text-align: center;
-    margin-bottom: 30px;
-    font-size: 2.5rem;
+    margin: 0 0 10px;
+    font-size: 1.1rem;
     color: var(--text-main);
 }
+
 .calc-subtitle {
     text-align: center;
     color: var(--text-muted);
-    margin-bottom: 30px;
-    font-size: 1.1rem;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
 }
 
 .calculator-selector {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-bottom: 40px;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.planner-controls-panel .toggle-button {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    border-width: 1px;
+    border-radius: 6px;
+    flex: 1;
+}
+
+.planner-controls-panel .main-content {
+    flex-direction: column;
+    gap: 12px;
+    display: block;
+}
+
+.planner-controls-panel .input-sections,
+.planner-controls-panel .result-section {
+    flex: none;
+    min-width: 0;
+    width: 100%;
+    position: static;
+}
+
+.planner-controls-panel .input-group {
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+}
+
+.planner-controls-panel .input-group h2 {
+    font-size: 0.92rem;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+}
+
+.planner-controls-panel .grid-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.planner-controls-panel label {
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+}
+
+.planner-controls-panel input[type="number"],
+.planner-controls-panel select {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+.planner-controls-panel .input-description {
+    font-size: 0.72rem;
+}
+
+.planner-controls-panel .calc-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    width: 100%;
+}
+
+.planner-controls-panel .result-box {
+    padding: 12px;
+}
+
+.planner-controls-panel .result-box h3 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.planner-controls-panel .result-item {
+    padding: 6px 0;
+    font-size: 0.78rem;
+}
+
+.planner-controls-panel .result-item strong {
+    font-size: 0.88rem;
+}
+
+.planner-controls-panel .measured-area-note {
+    font-size: 0.72rem;
+    padding: 5px 8px;
+    min-height: 0;
+}
+
+.map-tools-overlay {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 1100;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
 }
 
 .toggle-button {
@@ -360,9 +489,28 @@ input[type="number"]:focus, select:focus {
     background: white;
 }
 
+input[readonly] {
+    background: #eef6ff;
+    color: #1e40af;
+    cursor: default;
+}
+
 .input-description {
     font-size: 0.85rem;
     color: var(--text-muted);
+}
+
+.measured-area-note {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    margin: 2px 0 10px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.85rem;
+    font-weight: 700;
 }
 
 .result-box {
@@ -402,24 +550,162 @@ input[type="number"]:focus, select:focus {
     font-weight: 600;
 }
 
-/* ================= WEBMAP PAGE ================= */
-#page-webmap {
-    padding: 0; /* Map takes full space */
-    position: absolute;
-    top: 70px; left:0; right:0; bottom:0;
+.map-action-row {
+    padding-top: 22px;
 }
-.map-overlay-ui {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1000;
+
+.map-cta {
+    width: 100%;
 }
+
 .map-panel {
-    padding: 20px;
-    width: 300px;
+    padding: 12px;
+    width: 230px;
+    background: rgba(255, 255, 255, 0.95);
+    font-size: 0.8rem;
 }
-.map-panel h3 { margin-top:0; color: var(--text-main); }
-.map-panel p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0;}
+.map-panel h3 {
+    margin: 0 0 10px;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+.map-panel p { color: var(--text-muted); font-size: 0.78rem; margin-bottom: 0;}
+
+.map-summary {
+    display: grid;
+    gap: 3px;
+    padding: 8px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: var(--text-main);
+    font-size: 0.74rem;
+    line-height: 1.3;
+}
+
+.map-summary strong {
+    color: var(--primary-color);
+}
+
+.map-area-readout {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #ecfdf5;
+    color: #047857;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.map-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.map-tool-btn,
+.export-btn {
+    min-height: 32px;
+    padding: 4px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    color: var(--text-main);
+    font-weight: 700;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.map-tool-btn:hover,
+.export-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+.map-tool-btn.active {
+    color: white;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+}
+
+.takeoff-tool { border-color: #16a34a; }
+.landing-tool { border-color: #dc2626; }
+.area-tool { border-color: #0284c7; }
+.neutral-tool { border-color: #94a3b8; }
+
+.map-field {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.map-field label {
+    font-size: 0.75rem;
+    margin-bottom: 0;
+}
+
+.map-field input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+}
+
+.map-generate-btn {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+}
+
+.map-generate-btn:disabled,
+.export-btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.export-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.map-status {
+    margin-top: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 0.72rem;
+    line-height: 1.3;
+}
+
+.mission-point-icon {
+    border-radius: 50%;
+    color: white;
+    display: grid;
+    place-items: center;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
+    border: 2px solid white;
+}
+
+.mission-point-icon.takeoff-icon {
+    background: #16a34a;
+}
+
+.mission-point-icon.landing-icon {
+    background: #dc2626;
+}
+
+.mission-crosshair {
+    cursor: crosshair;
+}
 
 
 /* ================= SAMPLES PAGE ================= */
@@ -503,6 +789,20 @@ input[type="number"]:focus, select:focus {
 .contact-form button { width: 100%; font-size: 1.1rem; }
 
 /* Responsive adjustments */
+@media (max-width: 900px) {
+    .planner-controls-panel {
+        width: calc(100vw - 36px);
+        bottom: auto;
+        max-height: 55vh;
+    }
+    .map-tools-overlay {
+        right: 12px;
+        bottom: 12px;
+        max-height: 45vh;
+    }
+    .map-panel { width: 280px; }
+}
+
 @media (max-width: 768px) {
     .main-content { flex-direction: column; }
     .hero-section { flex-direction: column; text-align: center; padding-top: 40px; }
@@ -510,4 +810,6 @@ input[type="number"]:focus, select:focus {
     .hero-buttons { justify-content: center; }
     .nav-links { gap: 15px; }
     .page-view { padding: 20px; }
+    #page-planner.page-view { padding: 0; }
+    .map-panel { width: calc(100vw - 24px); max-width: 320px; }
 }
